@@ -1,0 +1,2 @@
+Adafruit CircuitPython 7.1.0-rc.0-175-g928695f75-dirty on 2021-12-26; Saola 1 w/Wrover with ESP32S2
+Board ID:espressif_saola_1_wrover

@@ -1,0 +1,2 @@
+import ili9488_pitft_simpletest_parallel
+# import touch_simpletest
