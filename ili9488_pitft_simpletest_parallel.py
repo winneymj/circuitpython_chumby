@@ -18,6 +18,7 @@ import adafruit_focaltouch
 from adafruit_display_text import label
 from bagaloozy_ili9488 import ILI9488
 from paralleldisplay import ParallelBus
+from adafruit_button import Button
 
 
 # Release any resources currently in use for the displays
