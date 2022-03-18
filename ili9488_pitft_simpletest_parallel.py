@@ -20,6 +20,17 @@ from bagaloozy_ili9488 import ILI9488
 from paralleldisplay import ParallelBus
 from adafruit_button import Button
 
+# --| Button Config |-------------------------------------------------
+BUTTON_X = 110
+BUTTON_Y = 95
+BUTTON_WIDTH = 100
+BUTTON_HEIGHT = 50
+BUTTON_STYLE = Button.ROUNDRECT
+BUTTON_FILL_COLOR = 0x00FFFF
+BUTTON_OUTLINE_COLOR = 0xFF00FF
+BUTTON_LABEL = "HELLO WORLD"
+BUTTON_LABEL_COLOR = 0x000000
+# --| Button Config |-------------------------------------------------
 
 # Release any resources currently in use for the displays
 displayio.release_displays()
@@ -49,6 +60,20 @@ i2c = busio.I2C(board.IO17, board.IO16)
 
 ft = adafruit_focaltouch.Adafruit_FocalTouch(i2c, debug=False)
 display = ILI9488(display_bus, width=320, height=480)
+
+# Make the button
+button = Button(
+    x=BUTTON_X,
+    y=BUTTON_Y,
+    width=BUTTON_WIDTH,
+    height=BUTTON_HEIGHT,
+    style=BUTTON_STYLE,
+    fill_color=BUTTON_FILL_COLOR,
+    outline_color=BUTTON_OUTLINE_COLOR,
+    label=BUTTON_LABEL,
+    label_font=terminalio.FONT,
+    label_color=BUTTON_LABEL_COLOR,
+)
 
 # Make the display context
 splash = displayio.Group()
@@ -83,16 +108,26 @@ touch_palette[0] = 0x000000  # Red
 touch_sprite = displayio.TileGrid(touch_bitmap, pixel_shader=touch_palette, x=0, y=0)
 splash.append(touch_sprite)
 
+# Add button to the display context
+splash.append(button)
+
 while True:
     if ft.touched:
         ts = ft.touches
         if ts:
             # print(ts)
-            point = ts[0]  # the shield only supports one point!
-            x = point["x"]
-            y = point["y"]
+            touch_point = ts[0]  # the shield only supports one point!
+            x = touch_point["x"]
+            y = touch_point["y"]
             touch_sprite.x = x
             touch_sprite.y = y
+            if button.contains([x, y]):
+                button.selected = True
+            else:
+                button.selected = False  # if touch is dragged outside of button
+        else:
+            button.selected = False  # if touch is released
     else:
         print("no touch")
         time.sleep(0.15)
+        button.selected = False  # if touch is released
