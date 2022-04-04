@@ -8,7 +8,10 @@ using the displayio module.
 
 Pinouts are for the PiTFT and should be run in CPython.
 """
+import sys
 import time
+from functools import wraps
+
 import board
 import terminalio
 import displayio
@@ -19,6 +22,64 @@ from adafruit_display_text import label
 from bagaloozy_ili9488 import ILI9488
 from paralleldisplay import ParallelBus
 from adafruit_button import Button
+
+def add_method(cls):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            return func(*args, **kwargs)
+
+        # print(func)
+        # print(sys.modules[func.__globals__['__name__']])
+        setattr(cls, 'foo', wrapper)
+        # setattr(cls, func.__name__, wrapper)
+        # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
+        return func # returning func means func can still be used normally
+    return decorator
+
+class A:
+    pass
+
+# No trickery. Class A has no methods nor variables.
+a = A()
+try:
+    a.foo()
+except AttributeError as ae:
+    print(f'Exception caught: {ae}') # 'A' object has no attribute 'foo'
+
+try:
+    a.bar('The quick brown fox jumped over the lazy dog.')
+except AttributeError as ae:
+    print(f'Exception caught: {ae}') # 'A' object has no attribute 'bar'
+
+
+# Decorator can be written to take normal functions and make them methods
+@add_method(A)
+def foo():
+    print('hello world!')
+
+@add_method(Button)
+def foo():
+    print('hello Button!')
+
+# @add_method(A)
+# def bar(s):
+#     print(f'Message: {s}')
+
+a.foo()
+
+def recurse_page(page, level):
+    # print("recurse_page: ENTER")
+    for page_item in page:
+        print("  " * level + str(page_item))
+        if type(page_item) == displayio.Group:
+            level += 1
+            recurse_page(page_item, level)
+        elif type(page_item) == Button:
+            print("GOT BUTTON")
+            page_item.foo()
+    level -= 1
+    # print("recurse_page: EXIT")
 
 # --| Button Config |-------------------------------------------------
 BUTTON_X = 110
@@ -59,7 +120,7 @@ display_bus = ParallelBus(data0=tft_data0,
 i2c = busio.I2C(board.IO17, board.IO16)
 
 ft = adafruit_focaltouch.Adafruit_FocalTouch(i2c, debug=False)
-display = ILI9488(display_bus, width=320, height=480)
+display = ILI9488(display_bus, width=320, height=480, auto_refresh=False)
 
 # Make the button
 button = Button(
@@ -111,6 +172,9 @@ splash.append(touch_sprite)
 # Add button to the display context
 splash.append(button)
 
+print("START---")
+recurse_page(splash, 0)
+
 while True:
     if ft.touched:
         ts = ft.touches
@@ -131,3 +195,9 @@ while True:
         print("no touch")
         time.sleep(0.15)
         button.selected = False  # if touch is released
+    display.refresh()
+
+
+
+
+
