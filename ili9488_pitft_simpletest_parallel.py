@@ -23,63 +23,63 @@ from bagaloozy_ili9488 import ILI9488
 from paralleldisplay import ParallelBus
 from adafruit_button import Button
 
+
 def add_method(cls):
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             return func(*args, **kwargs)
 
-        # print(func)
-        # print(sys.modules[func.__globals__['__name__']])
-        setattr(cls, 'foo', wrapper)
-        # setattr(cls, func.__name__, wrapper)
+        setattr(cls, func.__name__, wrapper)
         # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
-        return func # returning func means func can still be used normally
+        return func  # returning func means func can still be used normally
+
     return decorator
-
-class A:
-    pass
-
-# No trickery. Class A has no methods nor variables.
-a = A()
-try:
-    a.foo()
-except AttributeError as ae:
-    print(f'Exception caught: {ae}') # 'A' object has no attribute 'foo'
-
-try:
-    a.bar('The quick brown fox jumped over the lazy dog.')
-except AttributeError as ae:
-    print(f'Exception caught: {ae}') # 'A' object has no attribute 'bar'
 
 
 # Decorator can be written to take normal functions and make them methods
-@add_method(A)
-def foo():
-    print('hello world!')
 
 @add_method(Button)
-def foo():
-    print('hello Button!')
+def set_pressed_callback(self, callback):
+    print('set_pressed_callback')
+    self._pressed_callback = callback
 
-# @add_method(A)
-# def bar(s):
-#     print(f'Message: {s}')
 
-a.foo()
+@add_method(Button)
+def set_released_callback(self, callback):
+    print('set_pressed_callback')
+    self._released_callback = callback
 
-def recurse_page(page, level):
-    # print("recurse_page: ENTER")
+
+@add_method(Button)
+def detect_touch(self: Button, point):
+    (x_pos, y_pos) = point
+    if self.contains([x_pos, y_pos]):
+        if not hasattr(self, '_pressed_callback') or self.selected:
+            return
+        self.selected = True
+        self._pressed_callback(self)
+    else:
+        if not hasattr(self, '_released_callback') or not self.selected:
+            return
+        self.selected = False
+        self._released_callback(self)
+
+
+def recurse_page(page, level, point):
+    # (x_pos, y_pos) = point
+    # print("recurse_page: point=" + str(x_pos) + "," + str(y_pos))
     for page_item in page:
-        print("  " * level + str(page_item))
+        # print("  " * level + str(page_item))
         if type(page_item) == displayio.Group:
             level += 1
-            recurse_page(page_item, level)
+            recurse_page(page_item, level, point)
         elif type(page_item) == Button:
-            print("GOT BUTTON")
-            page_item.foo()
+            # print("GOT BUTTON")
+            detect_touch(page_item, point)
     level -= 1
     # print("recurse_page: EXIT")
+
 
 # --| Button Config |-------------------------------------------------
 BUTTON_X = 110
@@ -173,31 +173,32 @@ splash.append(touch_sprite)
 splash.append(button)
 
 print("START---")
-recurse_page(splash, 0)
+
+
+def button_pressed_callback(self):
+    print('button_pressed_callback - do something!')
+
+
+def button_released_callback(self):
+    print('button_released_callback - do something!')
+
+
+button.set_pressed_callback(button, button_pressed_callback)
+button.set_released_callback(button, button_released_callback)
 
 while True:
     if ft.touched:
         ts = ft.touches
         if ts:
-            # print(ts)
             touch_point = ts[0]  # the shield only supports one point!
             x = touch_point["x"]
             y = touch_point["y"]
             touch_sprite.x = x
             touch_sprite.y = y
-            if button.contains([x, y]):
-                button.selected = True
-            else:
-                button.selected = False  # if touch is dragged outside of button
-        else:
-            button.selected = False  # if touch is released
+
+            recurse_page(splash, 0, [x, y])
     else:
-        print("no touch")
+        recurse_page(splash, 0, [-1, -1])
+        # print("no touched")
         time.sleep(0.15)
-        button.selected = False  # if touch is released
     display.refresh()
-
-
-
-
-
