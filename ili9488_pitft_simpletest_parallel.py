@@ -67,8 +67,6 @@ def detect_touch(self: Button, point):
 
 
 def recurse_page(page, level, point):
-    # (x_pos, y_pos) = point
-    # print("recurse_page: point=" + str(x_pos) + "," + str(y_pos))
     for page_item in page:
         # print("  " * level + str(page_item))
         if type(page_item) == displayio.Group:
@@ -76,9 +74,8 @@ def recurse_page(page, level, point):
             recurse_page(page_item, level, point)
         elif type(page_item) == Button:
             # print("GOT BUTTON")
-            detect_touch(page_item, point)
+            page_item.detect_touch(page_item, point)
     level -= 1
-    # print("recurse_page: EXIT")
 
 
 # --| Button Config |-------------------------------------------------
