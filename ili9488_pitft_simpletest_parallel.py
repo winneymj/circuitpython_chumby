@@ -8,9 +8,7 @@ using the displayio module.
 
 Pinouts are for the PiTFT and should be run in CPython.
 """
-import sys
 import time
-from functools import wraps
 
 import board
 import terminalio
@@ -18,64 +16,11 @@ import displayio
 import digitalio
 import busio
 import adafruit_focaltouch
+import displaytools
 from adafruit_display_text import label
 from bagaloozy_ili9488 import ILI9488
 from paralleldisplay import ParallelBus
 from adafruit_button import Button
-
-
-def add_method(cls):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(*args, **kwargs)
-
-        setattr(cls, func.__name__, wrapper)
-        # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
-        return func  # returning func means func can still be used normally
-
-    return decorator
-
-
-# Decorator can be written to take normal functions and make them methods
-
-@add_method(Button)
-def set_pressed_callback(self, callback):
-    print('set_pressed_callback')
-    self._pressed_callback = callback
-
-
-@add_method(Button)
-def set_released_callback(self, callback):
-    print('set_pressed_callback')
-    self._released_callback = callback
-
-
-@add_method(Button)
-def detect_touch(self: Button, point):
-    (x_pos, y_pos) = point
-    if self.contains([x_pos, y_pos]):
-        if not hasattr(self, '_pressed_callback') or self.selected:
-            return
-        self.selected = True
-        self._pressed_callback(self)
-    else:
-        if not hasattr(self, '_released_callback') or not self.selected:
-            return
-        self.selected = False
-        self._released_callback(self)
-
-
-def recurse_page(page, level, point):
-    for page_item in page:
-        # print("  " * level + str(page_item))
-        if type(page_item) == displayio.Group:
-            level += 1
-            recurse_page(page_item, level, point)
-        elif type(page_item) == Button:
-            # print("GOT BUTTON")
-            page_item.detect_touch(page_item, point)
-    level -= 1
 
 
 # --| Button Config |-------------------------------------------------
@@ -180,8 +125,8 @@ def button_released_callback(self):
     print('button_released_callback - do something!')
 
 
-button.set_pressed_callback(button, button_pressed_callback)
-button.set_released_callback(button, button_released_callback)
+displaytools.set_pressed_callback(button, button_pressed_callback)
+displaytools.set_released_callback(button, button_released_callback)
 
 while True:
     if ft.touched:
@@ -193,9 +138,9 @@ while True:
             touch_sprite.x = x
             touch_sprite.y = y
 
-            recurse_page(splash, 0, [x, y])
+            displaytools.recurse_page(splash, [x, y])
     else:
-        recurse_page(splash, 0, [-1, -1])
+        displaytools.recurse_page(splash, [-1, -1])
         # print("no touched")
-        time.sleep(0.15)
+        time.sleep(0.10)
     display.refresh()
