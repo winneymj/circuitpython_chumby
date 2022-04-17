@@ -62,7 +62,7 @@ display_bus = ParallelBus(data0=tft_data0,
 i2c = busio.I2C(board.IO17, board.IO16)
 
 ft = adafruit_focaltouch.Adafruit_FocalTouch(i2c, debug=False)
-display = ILI9488(display_bus, width=320, height=480, auto_refresh=False)
+display = ILI9488(display_bus, width=320, height=480, auto_refresh=True)
 
 # Make the button
 button = Button(
@@ -74,6 +74,20 @@ button = Button(
     fill_color=BUTTON_FILL_COLOR,
     outline_color=BUTTON_OUTLINE_COLOR,
     label=BUTTON_LABEL,
+    label_font=terminalio.FONT,
+    label_color=BUTTON_LABEL_COLOR,
+)
+
+# Make the button
+button2 = Button(
+    x=BUTTON_X,
+    y=BUTTON_Y + 50,
+    width=BUTTON_WIDTH,
+    height=BUTTON_HEIGHT,
+    style=BUTTON_STYLE,
+    fill_color=BUTTON_FILL_COLOR,
+    outline_color=BUTTON_OUTLINE_COLOR,
+    label='World Hello',
     label_font=terminalio.FONT,
     label_color=BUTTON_LABEL_COLOR,
 )
@@ -111,15 +125,20 @@ touch_palette[0] = 0x000000  # Red
 touch_sprite = displayio.TileGrid(touch_bitmap, pixel_shader=touch_palette, x=0, y=0)
 splash.append(touch_sprite)
 
-# Add button to the display context
+# Add buttons to the display context
 splash.append(button)
+splash.append(button2)
 
 print("START---")
 
+def button2_pressed_callback(self):
+    print('button2_pressed_callback - do something!')
+
+def button2_released_callback(self):
+    print('button2_released_callback - do something!')
 
 def button_pressed_callback(self):
     print('button_pressed_callback - do something!')
-
 
 def button_released_callback(self):
     print('button_released_callback - do something!')
@@ -127,6 +146,9 @@ def button_released_callback(self):
 
 displaytools.set_pressed_callback(button, button_pressed_callback)
 displaytools.set_released_callback(button, button_released_callback)
+
+displaytools.set_pressed_callback(button2, button2_pressed_callback)
+displaytools.set_released_callback(button2, button2_released_callback)
 
 while True:
     if ft.touched:
@@ -143,4 +165,4 @@ while True:
         displaytools.recurse_page(splash, [-1, -1])
         # print("no touched")
         time.sleep(0.10)
-    display.refresh()
+    # display.refresh()
