@@ -10,7 +10,7 @@ ssid_list = wt.get_ssid_list
 for ssid in ssid_list:
     print("ssid=" + ssid)
 
-connected = wt.connect("ogsplosh", "7526250244")
+connected = wt.connect("", "")
 print("connected=" + str(connected))
 
 address = wt.ip_address
