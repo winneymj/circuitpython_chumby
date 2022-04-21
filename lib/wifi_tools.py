@@ -5,7 +5,7 @@ import socketpool
 import ssl
 
 
-# import adafruit_requests
+import adafruit_requests
 
 
 class Wifi_Tools:
@@ -18,6 +18,11 @@ class Wifi_Tools:
         self._ssid = ""
         self._password = ""
         self._connected = False
+        self._socket_pool = self._init_socket_pool()
+
+    @staticmethod
+    def _init_socket_pool() -> socketpool.SocketPool:
+        return socketpool.SocketPool(wifi.radio)
 
     def scan_network(self) -> int:
         for network in wifi.radio.start_scanning_networks():
@@ -49,6 +54,16 @@ class Wifi_Tools:
             return wifi.radio.ipv4_address
         else:
             return None
+
+    def fetch_response(self, url_str) -> [int, str]:
+        request = adafruit_requests.Session(self._socket_pool, ssl.create_default_context())
+        # print("fetch_response:Fetching " + url_str);
+        response = request.get(url_str)
+        ret_val = [response.status_code, response.text]
+        # print(response.status_code)
+        # print(response.text)
+        return ret_val
+
 #
 # print("my IP addr:", wifi.radio.ipv4_address)
 #
