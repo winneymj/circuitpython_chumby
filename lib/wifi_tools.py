@@ -4,7 +4,6 @@ import wifi
 import socketpool
 import ssl
 
-
 import adafruit_requests
 
 
@@ -19,6 +18,10 @@ class Wifi_Tools:
         self._password = ""
         self._connected = False
         self._socket_pool = self._init_socket_pool()
+
+    @property
+    def ssid(self):
+        return self._ssid
 
     @staticmethod
     def _init_socket_pool() -> socketpool.SocketPool:
@@ -55,14 +58,23 @@ class Wifi_Tools:
         else:
             return None
 
-    def fetch_response(self, url_str) -> [int, str]:
+    def fetch_response(self, url: str, **kw) -> adafruit_requests.Response:
         request = adafruit_requests.Session(self._socket_pool, ssl.create_default_context())
-        # print("fetch_response:Fetching " + url_str);
-        response = request.get(url_str)
-        ret_val = [response.status_code, response.text]
+        print("fetch_response:Fetching:url=" + url);
+        print("fetch_response:Fetching:kw =" + str(kw));
+        response = request.get(url, **kw)
+        print("fetch_response:Fetching:response.status_code =" + str(response.status_code));
+
+        return response
+        # ret_val = [response.status_code, response.text]
         # print(response.status_code)
         # print(response.text)
-        return ret_val
+        # return ret_val
+
+    def get(self, url: str, **kw) -> [int, str]:
+        return self.fetch_response(url, **kw)
+
+wifi_tools = Wifi_Tools()
 
 #
 # print("my IP addr:", wifi.radio.ipv4_address)

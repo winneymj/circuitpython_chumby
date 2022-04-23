@@ -1,5 +1,6 @@
 # import argparse
-import adafruit_requests
+# import adafruit_requests
+from wifi_tools import wifi_tools
 
 # import feedparser
 # from fuzzywuzzy import process
@@ -45,29 +46,34 @@ class NewsClient:
         """
         function to get params dict for HTTP request
         """
-        # location_code = 'US'
-        # language_code = 'en'
-        # if len(self.location):
-        #     location_code = locationMap[process.extractOne(self.location, self.locations)[0]]
-        # if len(self.language):
-        #     language_code = langMap[process.extractOne(self.language, self.languages)[0]]
-        # params = {
-        #     'hl': language_code,
-        #     'gl': location_code,
-        #     'ceid': '{}:{}'.format(location_code, language_code)
-        # }
-        # return params
+        location_code = 'US'
+        language_code = 'en'
+        if len(self.location):
+            location_code = locationMap[self.location]
+            # print("location_code=" + location_code)
+        if len(self.language):
+            language_code = langMap[self.language]
+            # print("language_code=" + language_code)
+        params = {
+            'hl': language_code,
+            'gl': location_code,
+            'ceid': '{}:{}'.format(location_code, language_code)
+        }
+        return params
 
     def get_news(self):
         # pass
         # """
         # function to get news articles
         # """
+        print("wifi_tools._ssid=" + wifi_tools._ssid)
         if self.topic is None or self.topic == 'Top Stories':
-            resp = adafruit_requests.get(top_news_url, params=self.params_dict)
+            resp = wifi_tools.get(url=top_news_url)
+            # resp = wifi_tools.get(url=top_news_url, data=self.params_dict)
         else:
             topic_code = topicMap[process.extractOne(self.topic, self.topics)[0]]
-            resp = adafruit_requests.get(topic_url.format(topic_code), params=self.params_dict)
+            resp = wifi_tools.get(topic_url.format(topic_code), params=self.params_dict)
+        # print("resp.content=" + str(resp.content))
         return self.parse_feed(resp.content)
 
     def print_news(self):
